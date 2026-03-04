@@ -2,19 +2,44 @@ import "dotenv/config";
 
 // Import the framework and instantiate it
 import Fastify from "fastify";
-const fastify = Fastify({
+import {
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from "fastify-type-provider-zod";
+import z from "zod";
+const app = Fastify({
   logger: true,
 });
 
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
+
 // Declare a route
-fastify.get("/", async function handler() {
-  return { hello: "world" };
+
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: "GET",
+  url: "/",
+  schema: {
+    description: "Hello world",
+    tags: ["hello world"],
+    response: {
+      200: z.object({
+        message: z.string(),
+      }),
+    },
+  },
+  handler: () => {
+    return {
+      message: "false",
+    };
+  },
 });
 
 // Run the server!
 try {
-  await fastify.listen({ port: Number(process.env.PORT) || 8081 });
+  await app.listen({ port: Number(process.env.PORT) || 8081 });
 } catch (err) {
-  fastify.log.error(err);
+  app.log.error(err);
   process.exit(1);
 }
